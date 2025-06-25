@@ -50,7 +50,4 @@ jobs:
             artifacts/
 
 
-          path: |
-            test-results.xml
-            test-report.html
-            artifacts/
+        
