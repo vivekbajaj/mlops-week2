@@ -1,0 +1,93 @@
+name: IRIS ML Pipeline
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+      - uses: actions/setup-python@v4
+        with:
+          python version: "3.9"          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-html
+          
+      - name: Run training pipeline
+        run: python train.py
+        
+      - name: Run validation tests
+        run: |
+          pytest test_iris_validation.py --junitxml=test-results.xml --html=test-report.html
+          
+      - name: Generate CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create comprehensive report
+          echo "# IRIS Pipeline Test Results" > report.md
+          echo "" >> report.md
+          
+          # Add model metrics
+          echo "## Model Performance" >> report.md
+          python -c "
+          import joblib
+          import pandas as pd
+          from sklearn.model_selection import train_test_split
+          from sklearn.metrics import accuracy_score, classification_report
+          
+          # Load model and data
+          model = joblib.load('artifacts/model.joblib')
+          data = pd.read_csv('data/iris.csv')
+          train, test = train_test_split(data, test_size=0.4, stratify=data['species'], random_state=42)
+          X_test = test[['sepal_length','sepal_width','petal_length','petal_width']]
+          y_test = test.species
+          
+          predictions = model.predict(X_test)
+          accuracy = accuracy_score(y_test, predictions)
+          
+          print(f'**Accuracy:** {accuracy:.3f}')
+          print('')
+          print('**Classification Report:**')
+          print('```
+          print(classification_report(y_test, predictions))
+          print('```')
+          " >> report.md
+          
+          # Add test results summary
+          echo "" >> report.md
+          echo "## Test Results Summary" >> report.md
+          python -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('test-results.xml')
+          root = tree.getroot()
+          
+          tests = int(root.get('tests', 0))
+          failures = int(root.get('failures', 0))
+          errors = int(root.get('errors', 0))
+          passed = tests - failures - errors
+          
+          print(f'- **Total Tests:** {tests}')
+          print(f'- **Passed:** {passed}')
+          print(f'- **Failed:** {failures}')
+          print(f'- **Errors:** {errors}')
+          " >> report.md
+          
+          # Post report as comment
+          cml comment create report.md
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            test-report.html
+            artifacts/
