@@ -40,9 +40,9 @@ jobs:
           # Create comprehensive report
           echo "# IRIS Pipeline Test Results" > report.md
           echo "" >> report.md
-          # Add model metrics
-          echo "## Model Performance" >> report.md
-          python -c "import joblib
+          
+          python <<EOF >> report.md
+          import joblib
           import pandas as pd
           from sklearn.model_selection import train_test_split
           from sklearn.metrics import accuracy_score, classification_report
@@ -56,32 +56,36 @@ jobs:
           predictions = model.predict(X_test)
           accuracy = accuracy_score(y_test, predictions)
           
-          print(f'**Accuracy:** {accuracy:.3f}')
+          print('**Accuracy:** {:.3f}'.format(accuracy))
           print('')
           print('**Classification Report:**')
           print('```
           print(classification_report(y_test, predictions))
           print('```')
-          " >> report.md
-                    
-                    # Add test results summary
-                    echo "" >> report.md
-                    echo "## Test Results Summary" >> report.md
-                    python -c "import xml.etree.ElementTree as ET
+          EOF
+          
+          python <<EOF >> report.md          
+          import xml.etree.ElementTree as ET
+          
           tree = ET.parse('test-results.xml')
           root = tree.getroot()
+          if root.tag == 'testsuites':
+              ts = root.find('testsuite')
+          else:
+              ts = root
           
-          tests = int(root.get('tests', 0))
-          failures = int(root.get('failures', 0))
-          errors = int(root.get('errors', 0))
+          tests = int(ts.get('tests', 0))
+          failures = int(ts.get('failures', 0))
+          errors = int(ts.get('errors', 0))
           passed = tests - failures - errors
           
+          print("## Test Results Summary")
           print(f'- **Total Tests:** {tests}')
           print(f'- **Passed:** {passed}')
           print(f'- **Failed:** {failures}')
           print(f'- **Errors:** {errors}')
-          " >> report.md
-          
+          EOF
+            
           # Debug: Check report content
           echo "Generated report content:"
           cat report.md
