@@ -19,8 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install pytest pytest-html
+          pip install -r requirements.txt          
 
       - name: Run training pipeline
         run: python train.py     
@@ -59,7 +58,7 @@ jobs:
           print('**Classification Report:**')
           print('```')
           print(classification_report(y_test, predictions))
-          print('```
+          print('```)
           EOF
           
           # Run the Python script and capture output
