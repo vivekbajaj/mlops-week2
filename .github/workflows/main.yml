@@ -37,8 +37,8 @@ jobs:
           echo "# IRIS Pipeline Test Results" > report.md
           echo "" >> report.md
           echo "## Model Performance" >> report.md
-          # Use a temporary Python script to avoid indentation issues
-          cat << 'EOF' > report_script.py
+          # Create model_report.py with correct syntax
+          cat > model_report.py << 'EOM'
           import joblib
           import pandas as pd
           from sklearn.model_selection import train_test_split
@@ -56,18 +56,15 @@ jobs:
           print(f'**Accuracy:** {accuracy:.3f}')
           print('')
           print('**Classification Report:**')
-          print('```')
+          print('```
           print(classification_report(y_test, predictions))
-          print('```)
-          EOF
-          
+          print('```')
+          EOM          
           # Run the Python script and capture output
-          python report_script.py >> report.md
-          
-          # Add test results summary
-          cat << 'EOF' > summary_script.py
-          import xml.etree.ElementTree as ET
-          
+          python model_report.py >> report.md
+          # Create test_summary.py
+          cat > test_summary.py << 'EOM'
+          import xml.etree.ElementTree as ET          
           tree = ET.parse('test-results.xml')
           root = tree.getroot()
           if root.tag == 'testsuites':
@@ -85,8 +82,8 @@ jobs:
           print(f'- **Passed:** {passed}')
           print(f'- **Failed:** {failures}')
           print(f'- **Errors:** {errors}')
-          EOF
-          python summary_script.py >> report.md 
+          EOM
+          python test_summary.py >> report.md 
           # Debug: Check report content
           echo "Generated report content:"
           cat report.md
