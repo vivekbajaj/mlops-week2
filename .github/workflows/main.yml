@@ -57,9 +57,9 @@ jobs:
           print(f'**Accuracy:** {accuracy:.3f}')
           print('')
           print('**Classification Report:**')
-          print('```
-          print(classification_report(y_test, predictions))
           print('```')
+          print(classification_report(y_test, predictions))
+          print('```
           EOF
           
           # Run the Python script and capture output
