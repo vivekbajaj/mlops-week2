@@ -37,7 +37,7 @@ jobs:
           # Create comprehensive report
           echo "# IRIS Pipeline Test Results" > report.md
           echo "" >> report.md
-          
+          echo "## Model Performance" >> report.md
           python <<EOF >> report.md
           import joblib
           import pandas as pd
