@@ -38,7 +38,8 @@ jobs:
           echo "# IRIS Pipeline Test Results" > report.md
           echo "" >> report.md
           echo "## Model Performance" >> report.md
-          python <<EOF >> report.md
+          # Use a temporary Python script to avoid indentation issues
+          cat << 'EOF' > report_script.py
           import joblib
           import pandas as pd
           from sklearn.model_selection import train_test_split
@@ -61,7 +62,11 @@ jobs:
           print('```')
           EOF
           
-          python <<EOF >> report.md          
+          # Run the Python script and capture output
+          python report_script.py >> report.md
+          
+          # Add test results summary
+          cat << 'EOF' > summary_script.py
           import xml.etree.ElementTree as ET
           
           tree = ET.parse('test-results.xml')
@@ -82,7 +87,7 @@ jobs:
           print(f'- **Failed:** {failures}')
           print(f'- **Errors:** {errors}')
           EOF
-            
+          python summary_script.py >> report.md 
           # Debug: Check report content
           echo "Generated report content:"
           cat report.md
