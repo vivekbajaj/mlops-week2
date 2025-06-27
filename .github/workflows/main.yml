@@ -15,7 +15,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.12.3"
 
       - name: Install dependencies
         run: |
@@ -23,10 +23,7 @@ jobs:
           pip install pytest pytest-html
 
       - name: Run training pipeline
-        run: python train.py
-        
-      - name: List files
-        run: ls -R
+        run: python train.py     
 
       - name: Run validation tests
         run: |
@@ -56,7 +53,7 @@ jobs:
           predictions = model.predict(X_test)
           accuracy = accuracy_score(y_test, predictions)
           
-          print('**Accuracy:** {:.3f}'.format(accuracy))
+          print(f'**Accuracy:** {accuracy:.3f}')
           print('')
           print('**Classification Report:**')
           print('```
